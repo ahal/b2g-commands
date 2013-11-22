@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 PACKAGE_VERSION = '0.1'
 
-deps = ['mach']
+deps = []
 
 setup(name='b2g-commands',
       version=PACKAGE_VERSION,
@@ -28,4 +28,8 @@ setup(name='b2g-commands',
       packages=['commands'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=deps)
+      install_requires=deps,
+      entry_points="""
+        [mach.providers]
+        list_providers=commands:list_providers
+      """)
