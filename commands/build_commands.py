@@ -15,6 +15,7 @@ from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions
 )
+from mozprocess import ProcessHandler
 
 @CommandProvider
 class Build(MachCommandBase):
@@ -33,4 +34,16 @@ class Build(MachCommandBase):
         if os.path.isdir(outdir):
             mozfile.rmtree(outdir)
         return 0
+
+    @Command('build', category='build',
+        conditions=[],
+        description='Run the build script.')
+    def build_script(self):
+        command = os.path.join(self.b2g_home, 'build.sh')
+
+        p = ProcessHandler(command)
+        p.run()
+
+        #TODO: Error checking.
+        return p.wait()
 
