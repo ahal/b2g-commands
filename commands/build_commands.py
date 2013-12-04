@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import mozdevice
 import mozfile
 import os
 
@@ -16,6 +17,22 @@ from mozbuild.base import (
     MachCommandConditions as conditions
 )
 from mozprocess import ProcessHandler
+
+DEVICE_NOT_FOUND = '''
+The %s command cannot find a device.
+
+Please make sure your device is connected.
+'''.lstrip()
+
+def _is_device_attached(self):
+    """Returns True if a device is attached, False if not."""
+    try:
+        dm = mozdevice.DeviceManagerADB()
+        dm.devices()
+    except mozdevice.DMError:
+        print(DEVICE_NOT_FOUND % 'flash')
+        return False
+    return True
 
 @CommandProvider
 class Build(MachCommandBase):
@@ -36,7 +53,6 @@ class Build(MachCommandBase):
         return 0
 
     @Command('build', category='build',
-        conditions=[],
         description='Run the build script.')
     def build_script(self):
         command = os.path.join(self.b2g_home, 'build.sh')
@@ -47,3 +63,13 @@ class Build(MachCommandBase):
         #TODO: Error checking.
         return p.wait()
 
+    @Command('flash', category='build',
+        conditions=[conditions.is_b2g],
+        description='Flash the current B2G build onto a device.')
+    def flash(self):
+        command = os.path.join(self.b2g_home, 'flash.sh')
+        p = ProcessHandler(command)
+        if _is_device_attached():
+            p.run()
+            return p.wait()
+        return 1
