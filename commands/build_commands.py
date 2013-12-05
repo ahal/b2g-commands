@@ -53,6 +53,7 @@ class Build(MachCommandBase):
         return 0
 
     @Command('build', category='build',
+        conditions=[],
         description='Run the build script.')
     def build_script(self):
         command = os.path.join(self.b2g_home, 'build.sh')
