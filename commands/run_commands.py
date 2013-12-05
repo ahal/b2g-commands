@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import conditions
 import os
 
 from mach.decorators import (
@@ -12,7 +13,7 @@ from mach.decorators import (
 )
 from mozbuild.base import (
     MachCommandBase,
-    MachCommandConditions as conditions
+    MachCommandConditions as build_conditions
 )
 from mozprocess import ProcessHandler
 
@@ -23,9 +24,11 @@ class Run(MachCommandBase):
     def __init__(self, context):
         MachCommandBase.__init__(self, context)
         self.b2g_home = context.b2g_home
+        self.device_name = context.device_name
 
-    @Command('run-emulator', category='testing',
-        conditions=[conditions.is_b2g],
+    @Command('run-emulator', category='post-build',
+        conditions=[build_conditions.is_b2g,
+                    conditions.is_emulator],
         description='Run the B2G emulator.')
     def emulator(self):
         command = os.path.join(self.b2g_home, 'run-emulator.sh')

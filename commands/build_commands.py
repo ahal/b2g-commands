@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import conditions
 import mozdevice
 import mozfile
 import os
@@ -14,7 +15,7 @@ from mach.decorators import (
 )
 from mozbuild.base import (
     MachCommandBase,
-    MachCommandConditions as conditions
+    MachCommandConditions as build_conditions
 )
 from mozprocess import ProcessHandler
 
@@ -41,9 +42,10 @@ class Build(MachCommandBase):
     def __init__(self, context):
         MachCommandBase.__init__(self, context)
         self.b2g_home = context.b2g_home
+        self.device_name = context.device_name
 
     @Command('clobber', category='build',
-        conditions=[conditions.is_b2g],
+        conditions=[build_conditions.is_b2g],
         description='Clobber the tree (delete the objdir and out directory).')
     def clobber(self):
         self.remove_objdir()
@@ -64,8 +66,9 @@ class Build(MachCommandBase):
         #TODO: Error checking.
         return p.wait()
 
-    @Command('flash', category='build',
-        conditions=[conditions.is_b2g],
+    @Command('flash', category='post-build',
+        conditions=[build_conditions.is_b2g,
+                    conditions.is_device],
         description='Flash the current B2G build onto a device.')
     def flash(self):
         command = os.path.join(self.b2g_home, 'flash.sh')
