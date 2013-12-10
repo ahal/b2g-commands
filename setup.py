@@ -30,6 +30,6 @@ setup(name='b2g-commands',
       zip_safe=False,
       install_requires=deps,
       entry_points="""
-        [mach.providers]
+        [mach.b2g.providers]
         list_providers=commands:list_providers
       """)
