@@ -25,11 +25,11 @@ setup(name='b2g-commands',
       author_email='ahalberstadt@mozilla.com',
       url='https://github.com/ahal/b2g-commands',
       license='MPL 2.0',
-      packages=['commands'],
+      packages=['b2gcommands'],
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
       entry_points="""
         [mach.b2g.providers]
-        list_providers=commands:list_providers
+        list_b2g_providers=b2gcommands:list_providers
       """)
