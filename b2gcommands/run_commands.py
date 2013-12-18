@@ -39,3 +39,16 @@ class Run(MachCommandBase):
         #TODO The emulator requires adb to run, we should check if that is
         #running, catch that error or better yet, start adb.
         return p.wait()
+
+    @Command('run-gdb', category='post-build',
+        conditions=[build_conditions.is_b2g],
+        description='Run the GNU Debugger.')
+    def gdb(self):
+        command = os.path.join(self.b2g_home, 'run-gdb.sh')
+
+        p = ProcessHandler(command)
+        p.run()
+
+        #TODO The emulator requires adb to run, we should check if that is
+        #running, catch that error or better yet, start adb.
+        return p.wait()
