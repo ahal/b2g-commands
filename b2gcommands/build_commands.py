@@ -10,6 +10,7 @@ import mozfile
 import os
 
 from mach.decorators import (
+    CommandArgument,
     CommandProvider,
     Command,
 )
@@ -57,8 +58,42 @@ class Build(MachCommandBase):
     @Command('build', category='build',
         conditions=[],
         description='Run the build script.')
-    def build_script(self):
-        command = os.path.join(self.b2g_home, 'build.sh')
+    @CommandArgument('modules', nargs='*',
+                     help='Only build specified sub-modules')
+    @CommandArgument('--debug', action='store_true',
+                     help='Enable a debug build')
+    @CommandArgument('--profiling', action='store_true',
+                     help='Enable SPS profiling')
+    @CommandArgument('--noftu', action='store_true',
+                     help='Disable first time user experience')
+    @CommandArgument('--noopt', action='store_true',
+                     help='Disable optimizer')
+    @CommandArgument('--valgrind', action='store_true',
+                     help='Enable valgrind')
+    def build_script(self, modules=None, debug=False, profiling=False,
+                     noftu=False, noopt=False, valgrind=False):
+        command = [os.path.join(self.b2g_home, 'build.sh')]
+
+        if modules:
+            command.extend(modules)
+
+        if debug:
+            command.insert(0, 'B2G_DEBUG=1')
+
+        if profiling:
+            command.insert(0, 'MOZ_PROFILING=1')
+
+        if noftu:
+            command.insert(0, 'NOFTU=1')
+
+        if noopt:
+            if profiling:
+                print("Can't perform profiling if optimizer is disabled")
+                return 1
+            command.insert(0, 'B2G_NOOPT=1')
+
+        if valgrind:
+            command.insert(0, 'B2G_VALGRIND=1')
 
         p = ProcessHandler(command)
         p.run()
