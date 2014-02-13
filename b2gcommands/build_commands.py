@@ -5,9 +5,9 @@
 from __future__ import print_function, unicode_literals
 
 import conditions
-import mozdevice
 import mozfile
 import os
+import usb
 
 from mach.decorators import (
     CommandArgument,
@@ -20,21 +20,6 @@ from mozbuild.base import (
 )
 from mozprocess import ProcessHandler
 
-DEVICE_NOT_FOUND = '''
-The %s command cannot find a device.
-
-Please make sure your device is connected.
-'''.lstrip()
-
-def _is_device_attached(self):
-    """Returns True if a device is attached, False if not."""
-    try:
-        dm = mozdevice.DeviceManagerADB()
-        dm.devices()
-    except mozdevice.DMError:
-        print(DEVICE_NOT_FOUND % 'flash')
-        return False
-    return True
 
 @CommandProvider
 class Build(MachCommandBase):
@@ -105,10 +90,20 @@ class Build(MachCommandBase):
         conditions=[build_conditions.is_b2g,
                     conditions.is_device],
         description='Flash the current B2G build onto a device.')
-    def flash(self):
+    @CommandArgument('partitions', nargs='*',
+                     help='Only flash specified partitions')
+    @CommandArgument('--app', action='store',
+                     help='Update only a specific app')
+    def flash(self, partitions=None, app=None):
+        usb.verify_device('flash')
+
         command = os.path.join(self.b2g_home, 'flash.sh')
+        if partitions:
+            command.extend(partitions)
+
+        if app:
+            command.insert(0, 'BUILD_APP_NAME=%s' % app)
+
         p = ProcessHandler(command)
-        if _is_device_attached():
-            p.run()
-            return p.wait()
-        return 1
+        p.run()
+        return p.wait()

@@ -92,10 +92,11 @@ class B2GBootstrapper(object):
             # for osx, use the shell script provided in the documentation
             self.boot.instance.ensure_xcode()
             self._download('https://raw.github.com/mozilla-b2g/B2G/master/scripts/bootstrap-mac.sh')
-            subprocess.check_call(['bash', 'bootstrap-mac.sh'])
+            print('Running the mac bootstrap script...')
+            ret = subprocess.call(['bash', 'bootstrap-mac.sh'])
             os.remove('bootstrap-mac.sh')
             print(self.boot.finished)
-            return
+            return ret
 
         self.boot.bootstrap()
 
@@ -231,7 +232,12 @@ class B2GBootstrapper(object):
 
     def _download(self, url, savepath=''):
         print('Downloading %s...' % url)
-        data = urllib2.urlopen(url)
+        try:
+            data = urllib2.urlopen(url)
+        except urllib2.URLError:
+            print('There was a problem downloading the file. Make sure you' \
+                  'are connected to the network and try again.')
+            sys.exit(1)
         if savepath == '' or os.path.isdir(savepath):
             parsed = urlparse.urlsplit(url)
             filename = parsed.path[parsed.path.rfind('/')+1:]
