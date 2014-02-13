@@ -5,9 +5,9 @@
 from __future__ import print_function, unicode_literals
 
 import conditions
-import mozdevice
 import mozfile
 import os
+import usb
 
 from mach.decorators import (
     CommandArgument,
@@ -20,21 +20,6 @@ from mozbuild.base import (
 )
 from mozprocess import ProcessHandler
 
-DEVICE_NOT_FOUND = '''
-The %s command cannot find a device.
-
-Please make sure your device is connected.
-'''.lstrip()
-
-def _is_device_attached(self):
-    """Returns True if a device is attached, False if not."""
-    try:
-        dm = mozdevice.DeviceManagerADB()
-        dm.devices()
-    except mozdevice.DMError:
-        print(DEVICE_NOT_FOUND % 'flash')
-        return False
-    return True
 
 @CommandProvider
 class Build(MachCommandBase):
@@ -108,7 +93,16 @@ class Build(MachCommandBase):
     def flash(self):
         command = os.path.join(self.b2g_home, 'flash.sh')
         p = ProcessHandler(command)
-        if _is_device_attached():
+        if usb.is_attached():
             p.run()
             return p.wait()
+        print(DEVICE_NOT_FOUND % 'flash')
         return 1
+
+    @Command('vendor-ids', category='post-build',
+        description='Print vendor ID\'s for udev rules.')
+    def vendor_ids(self):
+        with open('vendors.json', 'r') as f:
+            output = f.read()
+
+        vendors = json.parse(output)
