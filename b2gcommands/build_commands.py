@@ -31,7 +31,7 @@ class Build(MachCommandBase):
         self.device_name = context.device_name
 
     @Command('clobber', category='build',
-        conditions=[build_conditions.is_b2g],
+        conditions=[lambda x: True],
         description='Clobber the tree (delete the objdir and out directory).')
     def clobber(self):
         self.remove_objdir()
@@ -45,6 +45,8 @@ class Build(MachCommandBase):
         description='Run the build script.')
     @CommandArgument('modules', nargs='*',
                      help='Only build specified sub-modules')
+    @CommandArgument('-j', action='store', dest='cores',
+                     help='Number of cores to use')
     @CommandArgument('--debug', action='store_true',
                      help='Enable a debug build')
     @CommandArgument('--profiling', action='store_true',
@@ -55,32 +57,36 @@ class Build(MachCommandBase):
                      help='Disable optimizer')
     @CommandArgument('--valgrind', action='store_true',
                      help='Enable valgrind')
-    def build_script(self, modules=None, debug=False, profiling=False,
-                     noftu=False, noopt=False, valgrind=False):
+    def build_script(self, modules=None, cores=None, debug=False,
+                     profiling=False, noftu=False, noopt=False, valgrind=False):
         command = [os.path.join(self.b2g_home, 'build.sh')]
+        env = os.environ.copy()
 
         if modules:
             command.extend(modules)
 
+        if cores:
+            command.append('-j%s' % cores)
+
         if debug:
-            command.insert(0, 'B2G_DEBUG=1')
+            env['B2G_DEBUG'] = '1'
 
         if profiling:
-            command.insert(0, 'MOZ_PROFILING=1')
+            env['MOZ_PROFILING'] = '1'
 
         if noftu:
-            command.insert(0, 'NOFTU=1')
+            env['NOFTU'] = '1'
 
         if noopt:
             if profiling:
                 print("Can't perform profiling if optimizer is disabled")
                 return 1
-            command.insert(0, 'B2G_NOOPT=1')
+            env['B2G_NOOPT'] = '1'
 
         if valgrind:
-            command.insert(0, 'B2G_VALGRIND=1')
+            env['B2G_VALGRIND'] = '1'
 
-        p = ProcessHandler(command)
+        p = ProcessHandler(command, env=env)
         p.run()
 
         #TODO: Error checking.
