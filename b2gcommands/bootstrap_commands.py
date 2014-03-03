@@ -22,11 +22,11 @@ FINISHED = '''
 Your system should be ready to build B2G! If you have not already,
 obtain a copy of the source code by running:
 
-    ./config.sh <device name>
+    ./mach config <device name>
 
 For a list of possible devices to build against, run:
 
-    ./config.sh
+    ./mach config
 '''
 
 PLATFORM_NOT_IMPLEMENTED = '''
