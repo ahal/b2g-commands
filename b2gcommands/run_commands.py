@@ -11,11 +11,18 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-from mozbuild.base import (
-    MachCommandBase,
-    MachCommandConditions as build_conditions
-)
-from mozprocess import ProcessHandler
+try:
+    from mozbuild.base import (
+        MachCommandBase,
+        MachCommandConditions as build_conditions
+    )
+except ImportError:
+    # can't use these commands without a config anyway
+    from mozbuild_stub import (
+        MachCommandBase,
+        MachCommandConditions as build_conditions
+    )
+
 
 @CommandProvider
 class Run(MachCommandBase):
@@ -33,6 +40,7 @@ class Run(MachCommandBase):
     def emulator(self):
         command = os.path.join(self.b2g_home, 'run-emulator.sh')
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command)
         p.run()
 
@@ -46,6 +54,7 @@ class Run(MachCommandBase):
     def gdb(self):
         command = os.path.join(self.b2g_home, 'run-gdb.sh')
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command)
         p.run()
 

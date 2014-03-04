@@ -5,7 +5,6 @@
 from __future__ import print_function, unicode_literals
 
 import conditions
-import mozfile
 import os
 import usb
 
@@ -14,11 +13,16 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-from mozbuild.base import (
-    MachCommandBase,
-    MachCommandConditions as build_conditions
-)
-from mozprocess import ProcessHandler
+try:
+    from mozbuild.base import (
+        MachCommandBase,
+        MachCommandConditions as build_conditions
+    )
+except ImportError:
+    from mozbuild_stub import (
+        MachCommandBase,
+        MachCommandConditions as build_conditions
+    )
 
 
 @CommandProvider
@@ -31,17 +35,18 @@ class Build(MachCommandBase):
         self.device_name = context.device_name
 
     @Command('clobber', category='build',
-        conditions=[lambda x: True],
+        conditions=[conditions.is_configured],
         description='Clobber the tree (delete the objdir and out directory).')
     def clobber(self):
         self.remove_objdir()
         outdir = os.path.join(self.b2g_home, 'out')
         if os.path.isdir(outdir):
+            import mozfile
             mozfile.rmtree(outdir)
         return 0
 
     @Command('build', category='build',
-        conditions=[],
+        conditions=[conditions.is_configured],
         description='Run the build script.')
     @CommandArgument('modules', nargs='*',
                      help='Only build specified sub-modules')
@@ -86,6 +91,7 @@ class Build(MachCommandBase):
         if valgrind:
             env['B2G_VALGRIND'] = '1'
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command, env=env)
         p.run()
 
@@ -110,6 +116,7 @@ class Build(MachCommandBase):
         if app:
             command.insert(0, 'BUILD_APP_NAME=%s' % app)
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command)
         p.run()
         return p.wait()

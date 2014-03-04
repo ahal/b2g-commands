@@ -5,7 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import argparse
-import mozfile
+import conditions
 import os
 
 from mach.decorators import (
@@ -13,10 +13,6 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
-from mozbuild.base import (
-    MachCommandBase,
-)
-from mozprocess import ProcessHandler
 
 
 @CommandProvider
@@ -28,7 +24,7 @@ class Sync(object):
 
     @Command('sync', category='devenv',
         allow_all_args=True,
-        conditions=[],
+        conditions=[conditions.is_configured],
         description='Sync repositories.')
     @CommandArgument('args', nargs=argparse.REMAINDER,
         help='Run |mach sync --help| to see full arguments.')
@@ -38,6 +34,7 @@ class Sync(object):
 
         env = os.environ.copy()
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command, env=env)
         p.run()
 
@@ -60,6 +57,7 @@ class Sync(object):
         if device:
             command.append(device)
 
+        from mozprocess import ProcessHandler
         p = ProcessHandler(command, env=env)
         p.run()
 
