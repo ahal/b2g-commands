@@ -72,7 +72,7 @@ class version(str):
     def __cmp__(self, other):
         if not isinstance(other, basestring):
             raise TypeError
-        return str.__cmp__(version.normalize(self), version.normalize(other))
+        return cmp(version.normalize(self), version.normalize(other))
 
     def __eq__(self, other):
         return self.__cmp__(other) == 0
