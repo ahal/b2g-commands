@@ -67,6 +67,27 @@ Would you like us to update your .userconfig to do this? [y/N] '''
 FEDORA_18_GCC_4_6 = 'http://people.mozilla.org/~gsvelto/gcc-4.6.4-fc18.tar.xz'
 FEDORA_19_GCC_4_6 = 'http://people.mozilla.org/~gsvelto/gcc-4.6.4-fc19.tar.xz'
 
+class version(str):
+    """subclass for version strings"""
+    def __cmp__(self, other):
+        if not isinstance(other, basestring):
+            raise TypeError
+        return str.__cmp__(version.normalize(self), version.normalize(other))
+
+    def __eq__(self, other):
+        return self.__cmp__(other) == 0
+    def __lt__(self, other):
+        return self.__cmp__(other) == -1
+    def __gt__(self, other):
+        return self.__cmp__(other) == 1
+
+    @staticmethod
+    def normalize(v):
+        parts = [int(x) for x in v.split('.')]
+        while parts[-1] == 0:
+            parts.pop()
+        return parts
+
 
 class B2GBootstrapper(object):
     def __init__(self, b2g_home):
@@ -121,7 +142,7 @@ class B2GBootstrapper(object):
             # 32 bit libraries required to build ics emulator, bug 897727
             'ia32-libs',
             'lib32ncurses5-dev',
-            'lib32z1-dez',
+            'lib32z1-dev',
         ])
 
 
@@ -154,11 +175,11 @@ class B2GBootstrapper(object):
 
     def pre_bootstrap_ubuntu(self):
         dist = platform.linux_distribution()[:2]
-        dist = (dist[0].lower(), dist[1])
+        dist = (dist[0].lower(), version(dist[1]))
 
         # we require at least ubuntu 12.04 (linuxmint 13)
-        if (dist[0] == 'ubuntu' and int(dist[1]) < 12) or \
-           (dist[0] == 'linuxmint' and int(dist[1]) < 13) :
+        if (dist[0] == 'ubuntu' and dist[1] < '12.04') or \
+           (dist[0] == 'linuxmint' and dist[1] < '13') :
             print(OS_NOT_SUPPORTED)
             sys.exit(1)
 
@@ -166,7 +187,7 @@ class B2GBootstrapper(object):
             self.pre_bootstrap_debian()
         elif dist in (('ubuntu', '12.10'), ('linuxmint', '14')):
             # work around error about unmet dependencies for ia32-libs
-            self.boot.instance.apt_add_architecture('i386')
+            self.boot.instance.apt_add_architecture(['i386'])
             self.boot.instance.apt_update()
 
             self.pre_bootstrap_debian()
@@ -187,7 +208,7 @@ class B2GBootstrapper(object):
             self.boot.instance.packages.insert(0, '--no-install-recommends')
 
             # starting in 13.10, multi-arch packages are used
-            self.boot.instance.apt_add_architecture('i386')
+            self.boot.instance.apt_add_architecture(['i386'])
             self.boot.instance.apt_update()
 
             self.pre_bootstrap_debian()
@@ -267,12 +288,12 @@ class B2GBootstrapper(object):
             path_names = glob.glob('/opt/gcc-4.6.[0-9]*/bin')
             if not path_names:
                 print('gcc-4.6 not detected!')
-                version = platform.linux_distribution()[1]
-                if version in ('17', '18'):
+                v = version(platform.linux_distribution()[1])
+                if v in ('17', '18'):
                     path = self._download(FEDORA_18_GCC_4_6)
                     self.boot.instance.run_as_root(['tar', '-xa', '-C', '/opt', '-f', path])
                     os.remove(path)
-                elif version in ('19', '20'):
+                elif v in ('19', '20'):
                     path = self._download(FEDORA_19_GCC_4_6)
                     self.boot.instance.run_as_root(['tar', '-xa', '-C', '/opt', '-f', path])
                     os.remove(path)
@@ -297,10 +318,10 @@ class B2GBootstrapper(object):
 
     def post_bootstrap_ubuntu(self):
         dist = platform.linux_distribution()[:2]
-        dist = (dist[0].lower(), dist[1])
+        dist = (dist[0].lower(), version(dist[1]))
 
-        if (dist[0] == 'ubuntu' and float(dist[1]) > 12.04) or \
-           (dist[0] == 'linuxmint' and int(dist[1]) > 13):
+        if (dist[0] == 'ubuntu' and dist[1] > '12.04') or \
+           (dist[0] == 'linuxmint' and dist[1] > '13'):
             write_lines = [
                 'export CC=gcc-4.6',
                 'export CXX=g++-4.6',
