@@ -18,6 +18,8 @@ from mach.decorators import (
     Command,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 FINISHED = '''
 Your system should be ready to build B2G! If you have not already,
 obtain a copy of the source code by running:
@@ -94,7 +96,15 @@ class B2GBootstrapper(object):
         self.b2g_home = b2g_home
 
         # don't subclass Bootstrapper to avoid global imports
-        from mozboot.bootstrap import Bootstrapper
+        try:
+            from mozboot.bootstrap import Bootstrapper
+        except ImportError:
+            mozboot_dir = os.path.join(here, 'mozboot')
+            if not os.path.isdir(mozboot_dir):
+                from fetch import install_module
+                install_module('python/mozboot/mozboot')
+            sys.path.insert(0, mozboot_dir)
+            from mozboot.bootstrap import Bootstrapper
 
         self.boot = Bootstrapper(finished=FINISHED+SEE_MDN_DOCS)
         self.extra_packages = []
