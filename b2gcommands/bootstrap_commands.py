@@ -94,45 +94,48 @@ class version(str):
 class B2GBootstrapper(object):
     def __init__(self, b2g_home):
         self.b2g_home = b2g_home
+        self.mozboot_dir = None
 
         # don't subclass Bootstrapper to avoid global imports
         try:
             from mozboot.bootstrap import Bootstrapper
         except ImportError:
-            mozboot_dir = os.path.join(here, 'mozboot')
-            if not os.path.isdir(mozboot_dir):
-                from fetch import install_module
-                install_module('python/mozboot/mozboot')
-            sys.path.insert(0, mozboot_dir)
+            from fetch import install_module
+            self.mozboot_dir = install_module('python/mozboot/mozboot')
             from mozboot.bootstrap import Bootstrapper
 
         self.boot = Bootstrapper(finished=FINISHED+SEE_MDN_DOCS)
         self.extra_packages = []
 
     def bootstrap(self):
-        name = self.boot.instance.__class__.__name__
-        name = name[:name.index('Bootstrapper')].lower()
+        try:
+            name = self.boot.instance.__class__.__name__
+            name = name[:name.index('Bootstrapper')].lower()
 
-        if hasattr(self, 'pre_bootstrap_%s' % name):
-            getattr(self, 'pre_bootstrap_%s' % name)()
-        else:
-            self.boot.finished = PLATFORM_NOT_IMPLEMENTED + SEE_MDN_DOCS
-        self.boot.instance.packages.extend(self.extra_packages)
+            if hasattr(self, 'pre_bootstrap_%s' % name):
+                getattr(self, 'pre_bootstrap_%s' % name)()
+            else:
+                self.boot.finished = PLATFORM_NOT_IMPLEMENTED + SEE_MDN_DOCS
+            self.boot.instance.packages.extend(self.extra_packages)
 
-        if name == 'osx':
-            # for osx, use the shell script provided in the documentation
-            self.boot.instance.ensure_xcode()
-            self._download('https://raw.github.com/mozilla-b2g/B2G/master/scripts/bootstrap-mac.sh')
-            print('Running the mac bootstrap script...')
-            ret = subprocess.call(['bash', 'bootstrap-mac.sh'])
-            os.remove('bootstrap-mac.sh')
-            print(self.boot.finished)
-            return ret
+            if name == 'osx':
+                # for osx, use the shell script provided in the documentation
+                self.boot.instance.ensure_xcode()
+                self._download('https://raw.github.com/mozilla-b2g/B2G/master/scripts/bootstrap-mac.sh')
+                print('Running the mac bootstrap script...')
+                ret = subprocess.call(['bash', 'bootstrap-mac.sh'])
+                os.remove('bootstrap-mac.sh')
+                print(self.boot.finished)
+                return ret
 
-        self.boot.bootstrap()
+            self.boot.bootstrap()
 
-        if hasattr(self, 'post_bootstrap_%s' % name):
-            getattr(self, 'post_bootstrap_%s' % name)()
+            if hasattr(self, 'post_bootstrap_%s' % name):
+                getattr(self, 'post_bootstrap_%s' % name)()
+        finally:
+            if self.mozboot_dir:
+                import mozfile
+                mozfile.remove(self.mozboot_dir)
 
     def pre_bootstrap_centos(self):
         # XXX please test me
