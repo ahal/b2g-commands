@@ -42,7 +42,7 @@ class Sync(object):
 
     @Command('config', category='devenv',
         conditions=[],
-        description='Configure a device.')
+        description='Configure source tree for target device.')
     @CommandArgument('device', action='store', nargs='?', default=None,
         help='Device to configure.')
     @CommandArgument('--branch', action='store',
