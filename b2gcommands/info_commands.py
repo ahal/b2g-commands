@@ -9,6 +9,7 @@ import os
 
 from mach.decorators import (
     CommandProvider,
+    CommandArgument,
     Command,
 )
 
@@ -18,9 +19,22 @@ here = os.path.abspath(os.path.dirname(__file__))
 class Info(object):
     """Interface for information related commands."""
 
-    @Command('vendor-ids', category='misc',
+    @Command('vendor-id', category='misc',
         conditions=[lambda x: True],
         description='Prints vendor udev information',)
-    def vendors(self):
+    @CommandArgument('vendor', action='store', nargs='?',
+        help='Return id of specified vendor')
+    def vendors(self, vendor=None):
+        output = None
         with open(os.path.join(here, 'vendors'), 'r') as f:
-            print(f.read())
+            output = f.read()
+
+        if vendor:
+            for line in output.splitlines():
+                tokens = [t.lower() for t in line.split()]
+                if tokens and tokens[0].strip() == vendor.lower():
+                    print(tokens[1].strip())
+                    return
+            print("Vendor '%s' not found!" % vendor)
+            return 1
+        print(output)
