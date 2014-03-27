@@ -4,7 +4,7 @@
 
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '0.8'
+PACKAGE_VERSION = '0.9'
 
 deps = []
 

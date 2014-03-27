@@ -217,7 +217,7 @@ class B2GBootstrapper(object):
                 'g++-4.6',
                 'g++-4.6-multilib',
             ])
-        elif dist in (('ubtutu', '13.10'), ('linuxmint', '16')):
+        elif dist in (('ubuntu', '13.10'), ('linuxmint', '16')):
             self.boot.instance.packages.insert(0, '--no-install-recommends')
 
             # starting in 13.10, multi-arch packages are used
