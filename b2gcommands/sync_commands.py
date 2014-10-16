@@ -23,7 +23,6 @@ class Sync(object):
         self.b2g_home = context.b2g_home
 
     @Command('sync', category='devenv',
-        allow_all_args=True,
         conditions=[conditions.is_configured],
         description='Sync repositories.')
     @CommandArgument('args', nargs=argparse.REMAINDER,
