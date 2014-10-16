@@ -26,7 +26,7 @@ class Sync(object):
         conditions=[conditions.is_configured],
         description='Sync repositories.')
     @CommandArgument('args', nargs=argparse.REMAINDER,
-        help='Run |mach sync --help| to see full arguments.')
+        help='Run |mach sync -help| to see full arguments.')
     def sync(self, args):
         command = [os.path.join(self.b2g_home, 'repo'), 'sync']
         command.extend(args)
